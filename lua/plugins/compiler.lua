@@ -4,6 +4,9 @@ return {
         cmd = {"CompilerOpen", "CompilerToggleResults", "CompilerRedo"},
         dependencies = { "stevearc/overseer.nvim", "nvim-telescope/telescope.nvim" },
         opts = {},
+        config = function ()
+            require'compiler'.setup({})
+        end
     },
     { -- The task runner we use
         "stevearc/overseer.nvim",

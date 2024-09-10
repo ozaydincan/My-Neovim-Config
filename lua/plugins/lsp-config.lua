@@ -2,7 +2,7 @@ return{
     {
         "williamboman/mason.nvim",
         config= function()
-            require("mason").setup()
+            require("mason").setup({})
         end
     },
     {
@@ -18,11 +18,8 @@ return{
                     "pyright",
                     "clangd",
                     "arduino_language_server",
-                    "ast_grep",
                     "cmake",
-                    "tsserver",
                     "docker_compose_language_service",
-                    "harper_ls",
                     "sqlls",
                     "zls",
                     "vimls",
@@ -37,9 +34,11 @@ return{
             local lspconfig= require("lspconfig")
             lspconfig.lua_ls.setup({})
             lspconfig.pyright.setup({})
-            lspconfig.clangd.setup({})
-            lspconfig.tsserver.setup({})
-            lspconfig.ast_grep.setup({})
+            lspconfig.clangd.setup({
+                init_options = {
+                    fallbackFlags = {'--std=c++17'},
+                }
+            })
             vim.keymap.set('n', 'K', vim.lsp.buf.hover, {})
             vim.keymap.set('n', '<C-gd>', vim.lsp.buf.definition, {})
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, {})
