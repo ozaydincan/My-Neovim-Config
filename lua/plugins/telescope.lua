@@ -9,7 +9,6 @@ return{
         vim.keymap.set('n', '<leader>g', builtin.live_grep, {})
     end
     },
-    
     {
     'nvim-telescope/telescope-ui-select.nvim',
     config = function()

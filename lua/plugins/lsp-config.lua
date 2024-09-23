@@ -34,11 +34,7 @@ return{
             local lspconfig= require("lspconfig")
             lspconfig.lua_ls.setup({})
             lspconfig.pyright.setup({})
-            lspconfig.clangd.setup({
-                init_options = {
-                    fallbackFlags = {'--std=c++17'},
-                }
-            })
+            lspconfig.clangd.setup({})
             vim.keymap.set('n', 'K', vim.lsp.buf.hover, {})
             vim.keymap.set('n', '<C-gd>', vim.lsp.buf.definition, {})
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, {})
