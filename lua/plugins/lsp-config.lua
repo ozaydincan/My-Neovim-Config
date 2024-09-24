@@ -33,9 +33,15 @@ return{
         "neovim/nvim-lspconfig",
         config= function()
             local lspconfig= require("lspconfig")
+            local util = require "lspconfig/util"
             lspconfig.lua_ls.setup({})
             lspconfig.pyright.setup({})
             lspconfig.clangd.setup({})
+            lspconfig.gopls.setup({
+                cmd = {"gopls"},
+                filetypes = {"go", "gomod", "gowork", "gotmpls"},
+                root_dir = util.root_pattern{"go.work", "go.mod", "git"},
+            })
             vim.keymap.set('n', 'K', vim.lsp.buf.hover, {})
             vim.keymap.set('n', '<C-gd>', vim.lsp.buf.definition, {})
             vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, {})
