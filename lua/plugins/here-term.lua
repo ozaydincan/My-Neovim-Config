@@ -15,7 +15,7 @@ return {
             -- `normal` and `terminal` mode.
             mappings = {
                 toggle = "<C-;>",
-                kill = "<C-S-;>",
+                kill = "<leader>;"
             },
             -- Additional mappings that I consider useful since you won't have to escape (<C-\><C-n>)
             -- the terminal each time. Available in `terminal` mode.
