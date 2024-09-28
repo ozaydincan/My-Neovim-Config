@@ -38,3 +38,8 @@ vim.keymap.set("n", "<Leader>dr", "<cmd>lua require'dap'.run_last()<CR>", { desc
 vim.keymap.set("n", "<Leader>dt", "<cmd>lua vim.cmd('RustLsp testables')<CR>", { desc = "Debugger testables" })
 vim.keymap.set("n", "<leader>rx", "<cmd>lua vim.cmd('RustLsp runnables')<CR>", { desc = "Run Rust Code" })
 vim.keymap.set("n", "<Leader>dd", "<cmd>lua vim.cmd('RustLsp debuggables')<CR>", { desc = "Run debuggables" })
+-- Overseer key mappings
+vim.keymap.set("n", "<C-o>f", ":CompilerOpen<CR>", {desc = "Open Overseer float"})
+vim.keymap.set("n", "<C-o>r", ":CompilerRedo<CR>", {desc = "Redo Overseer"})
+vim.keymap.set("n", "<C-o>x", ":CompilerStop<CR>", {desc = "Stop Overseer"})
+vim.keymap.set("n", "<C-o>t", ":CompilerToggleResults<CR>", {desc = "Toggle Overseer"})
