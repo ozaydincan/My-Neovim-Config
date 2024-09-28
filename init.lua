@@ -15,6 +15,7 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
 end
 vim.opt.rtp:prepend(lazypath)
 vim.cmd("set number")
+vim.opt.hidden = true
 require("vim-options")
 require("lazy").setup("plugins")
 
