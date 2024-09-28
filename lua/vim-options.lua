@@ -4,6 +4,7 @@ vim.cmd("set expandtab")
 vim.cmd("set tabstop=4")
 vim.cmd("set softtabstop=4")
 vim.cmd("set shiftwidth=4")
+vim.cmd("set guicursor=i:block")
 
 vim.g.mapleader = " "
 vim.keymap.set('n', '<leader>pv', vim.cmd.ex)
@@ -29,8 +30,10 @@ vim.keymap.set("n", "<Leader>dl", "<cmd>lua require'dap'.step_into()<CR>", { des
 vim.keymap.set("n", "<Leader>dj", "<cmd>lua require'dap'.step_over()<CR>", { desc = "Debugger step over" })
 vim.keymap.set("n", "<Leader>dk", "<cmd>lua require'dap'.step_out()<CR>", { desc = "Debugger step out" })
 vim.keymap.set("n", "<Leader>dc", "<cmd>lua require'dap'.continue()<CR>", { desc = "Debugger continue" })
-vim.keymap.set("n", "<Leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<CR>", { desc = "Debugger toggle breakpoint" })
-vim.keymap.set("n", "<Leader>dcb", "<cmd>lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>", { desc = "Debugger set conditional breakpoint" })
+vim.keymap.set("n", "<Leader>db", "<cmd>lua require'dap'.toggle_breakpoint()<CR>",
+    { desc = "Debugger toggle breakpoint" })
+vim.keymap.set("n", "<Leader>dcb", "<cmd>lua require'dap'.set_breakpoint(vim.fn.input('Breakpoint condition: '))<CR>",
+    { desc = "Debugger set conditional breakpoint" })
 vim.keymap.set("n", "<Leader>de", "<cmd>lua require'dap'.terminate()<CR>", { desc = "Debugger reset" })
 vim.keymap.set("n", "<Leader>dr", "<cmd>lua require'dap'.run_last()<CR>", { desc = "Debugger run last" })
 
@@ -39,7 +42,7 @@ vim.keymap.set("n", "<Leader>dt", "<cmd>lua vim.cmd('RustLsp testables')<CR>", {
 vim.keymap.set("n", "<leader>rx", "<cmd>lua vim.cmd('RustLsp runnables')<CR>", { desc = "Run Rust Code" })
 vim.keymap.set("n", "<Leader>dd", "<cmd>lua vim.cmd('RustLsp debuggables')<CR>", { desc = "Run debuggables" })
 -- Overseer key mappings
-vim.keymap.set("n", "<C-o>f", ":CompilerOpen<CR>", {desc = "Open Overseer float"})
-vim.keymap.set("n", "<C-o>r", ":CompilerRedo<CR>", {desc = "Redo Overseer"})
-vim.keymap.set("n", "<C-o>x", ":CompilerStop<CR>", {desc = "Stop Overseer"})
-vim.keymap.set("n", "<C-o>t", ":CompilerToggleResults<CR>", {desc = "Toggle Overseer"})
+vim.keymap.set("n", "<C-o>f", ":CompilerOpen<CR>", { desc = "Open Overseer float" })
+vim.keymap.set("n", "<C-o>r", ":CompilerRedo<CR>", { desc = "Redo Overseer" })
+vim.keymap.set("n", "<C-o>x", ":CompilerStop<CR>", { desc = "Stop Overseer" })
+vim.keymap.set("n", "<C-o>t", ":CompilerToggleResults<CR>", { desc = "Toggle Overseer" })

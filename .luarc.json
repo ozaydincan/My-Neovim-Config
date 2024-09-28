@@ -2,6 +2,7 @@
     "diagnostics.globals": [
         "vim",
         "opts",
-        "view"
+        "view",
+        "sources"
     ]
 }
