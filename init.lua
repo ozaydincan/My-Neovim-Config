@@ -19,4 +19,6 @@ vim.opt.hidden = true
 require("vim-options")
 require("lazy").setup("plugins")
 
+-- Toggle search highlighting
+vim.api.nvim_set_keymap('n', '<leader>h', ':set hlsearch!<CR>', { noremap = true, silent = true })
 print("Hello Can")
