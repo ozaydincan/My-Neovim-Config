@@ -14,7 +14,7 @@ return {
             -- The minimal mappings used to toggle and kill the terminal. Available in
             -- `normal` and `terminal` mode.
             mappings = {
-                toggle = "<C-;>",
+                toggle = "<leader>,";
                 kill = "<leader>;"
             },
             -- Additional mappings that I consider useful since you won't have to escape (<C-\><C-n>)

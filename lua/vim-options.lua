@@ -7,7 +7,7 @@ vim.cmd("set shiftwidth=4")
 vim.cmd("set guicursor=i:block")
 
 vim.g.mapleader = " "
-vim.keymap.set('n', '<leader>pv', vim.cmd.ex)
+vim.keymap.set('n', '<leader>pv', ":Ex<CR>")
 vim.api.nvim_set_option("clipboard", "unnamed")
 
 -- define options for key mappings
@@ -46,3 +46,8 @@ vim.keymap.set("n", "<C-o>f", ":CompilerOpen<CR>", { desc = "Open Overseer float
 vim.keymap.set("n", "<C-o>r", ":CompilerRedo<CR>", { desc = "Redo Overseer" })
 vim.keymap.set("n", "<C-o>x", ":CompilerStop<CR>", { desc = "Stop Overseer" })
 vim.keymap.set("n", "<C-o>t", ":CompilerToggleResults<CR>", { desc = "Toggle Overseer" })
+
+vim.opt.tabstop = 2
+vim.opt.shiftwidth = 2
+vim.opt.expandtab = true
+vim.bo.softtabstop = 2
