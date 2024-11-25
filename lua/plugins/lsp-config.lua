@@ -12,35 +12,26 @@ return {
     opts = {
       auto_install = true,
     },
-<<<<<<< HEAD
     dependencies = {
       "williamboman/mason.nvim",
     },
-=======
->>>>>>> bd83f76fb4ed6f423ec182ce6ab034bc382d8b4d
     config = function()
       require("mason-lspconfig").setup({
         ensure_installed = {
           "lua_ls",
-<<<<<<< HEAD
           "gopls",
-=======
->>>>>>> bd83f76fb4ed6f423ec182ce6ab034bc382d8b4d
           "pyright",
           "clangd",
           "arduino_language_server",
           "cmake",
           "rust_analyzer",
-<<<<<<< HEAD
           "docker_compose_language_service",
           "sqlls",
           "zls",
           "vimls",
           "svelte",
-=======
           "sqlls",
           "zls",
->>>>>>> bd83f76fb4ed6f423ec182ce6ab034bc382d8b4d
         }
 
       })

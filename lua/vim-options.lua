@@ -1,19 +1,7 @@
-<<<<<<< HEAD
 vim.cmd("set number")
 vim.cmd("set relativenumber")
 vim.cmd("set expandtab")
 vim.cmd("set guicursor=i:block")
-=======
--- Set basic options (use vim.opt for simplicity)
-vim.opt.number = true                -- Show line numbers
-vim.opt.relativenumber = true        -- Relative line numbers
-vim.opt.expandtab = true             -- Convert tabs to spaces
-vim.opt.tabstop = 4                 -- Number of spaces for a tab
-vim.opt.softtabstop = 4             -- Number of spaces to insert when pressing Tab
-vim.opt.shiftwidth = 4              -- Number of spaces for auto-indentation
-vim.opt.guicursor = "i:block"       -- Block cursor in insert mode
->>>>>>> bd83f76fb4ed6f423ec182ce6ab034bc382d8b4d
-
 -- Set leader key
 vim.g.mapleader = " "
 
