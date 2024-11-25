@@ -7,32 +7,35 @@ return {
     end
   },
   {
-  'williamboman/mason-lspconfig.nvim',
-  lazy = false,
-  opts = {
-    auto_install = true,
+    'williamboman/mason-lspconfig.nvim',
+    lazy = false,
+    opts = {
+      auto_install = true,
+    },
+    dependencies = {
+      "williamboman/mason.nvim",
+    },
+    config = function()
+      require("mason-lspconfig").setup({
+        ensure_installed = {
+          "lua_ls",
+          "gopls",
+          "pyright",
+          "clangd",
+          "arduino_language_server",
+          "cmake",
+          "rust_analyzer",
+          "docker_compose_language_service",
+          "sqlls",
+          "zls",
+          "vimls",
+          "svelte",
+        }
+
+      })
+    end
+
   },
-  config = function()
-    require("mason-lspconfig").setup({
-      ensure_installed = {
-        "lua_ls",
-        "gopls",
-        "pyright",
-        "clangd",
-        "arduino_language_server",
-        "cmake",
-        "rust_analyzer",
-        "docker_compose_language_service",
-        "sqlls",
-        "zls",
-        "vimls",
-        "svelte",
-      }
-
-    })
-  end
-
-},
   {
     "neovim/nvim-lspconfig",
     config = function()

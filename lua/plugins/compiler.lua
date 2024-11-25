@@ -32,6 +32,6 @@ vim.api.nvim_set_keymap('n', '<C-r>r',
  { noremap = true, silent = true }),
 
 -- Toggle compiler results
-vim.api.nvim_set_keymap('n', '<S-F7>', "<cmd>CompilerToggleResults<cr>", { noremap = true, silent = true })
+vim.api.nvim_set_keymap('n', '<S-t>', "<cmd>CompilerToggleResults<cr>", { noremap = true, silent = true })
     }
 }
