@@ -2,6 +2,8 @@ vim.cmd("set number")
 vim.cmd("set relativenumber")
 vim.cmd("set expandtab")
 vim.cmd("set guicursor=i:block")
+--Need xclip on Linux with XOrg
+vim.cmd("set clipboard+=unnamedplus")
 -- Set leader key
 vim.g.mapleader = " "
 
@@ -9,7 +11,7 @@ vim.g.mapleader = " "
 vim.api.nvim_set_keymap('n', '<leader>pv', ":Ex<CR>", { noremap = true, silent = true })
 
 -- Clipboard support (ensure Neovim is compiled with clipboard support)
-vim.api.nvim_set_option("clipboard", "unnamed") -- Use the system clipboard
+--vim.api.nvim_set_option("clipboard", "unnamedplus") -- Use the system clipboard
 
 -- Define common options for key mappings (no remap, silent)
 local opts = { noremap = true, silent = true }
