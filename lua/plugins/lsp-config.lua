@@ -52,7 +52,12 @@ return {
       -- LSP server configurations
       lspconfig.lua_ls.setup({})
       lspconfig.pyright.setup({})
-      lspconfig.clangd.setup({})
+      lspconfig.clangd.setup({
+        cmd = {'clangd', '--background-index', '--clang-tidy', '--log=verbose'},
+        init_options={
+          fallbackFlags = {'-std=c++17'},
+        },
+      })
       lspconfig.svelte.setup({})
       lspconfig.gopls.setup({
         cmd = { "gopls" },
