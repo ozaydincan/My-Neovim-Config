@@ -9,7 +9,8 @@ vim.g.mapleader = " "
 
 -- File explorer (Open :Ex with leader key)
 vim.api.nvim_set_keymap('n', '<leader>pv', ":Ex<CR>", { noremap = true, silent = true })
-
+-- For new column length
+vim.opt.colorcolumn="80"
 -- Clipboard support (ensure Neovim is compiled with clipboard support)
 --vim.api.nvim_set_option("clipboard", "unnamedplus") -- Use the system clipboard
 
