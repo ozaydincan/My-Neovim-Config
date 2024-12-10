@@ -21,7 +21,7 @@ return {
           "lua_ls",
           "gopls",
           "pyright",
-          "clangd",
+          "ast_grep",
           "arduino_language_server",
           "cmake",
           "rust_analyzer",
@@ -30,19 +30,26 @@ return {
           "zls",
           "vimls",
           "svelte",
-          "sqlls",
-          "zls",
         }
-
       })
     end
-
   },
   {
     "neovim/nvim-lspconfig",
     config = function()
       local lspconfig = require("lspconfig")
       local util = require "lspconfig/util"
+      local cmp_nvim_lsp = require "cmp_nvim_lsp"
+
+      -- On_attach function (make sure this is defined)
+      local on_attach = function(client, bufnr)
+        -- Key mappings and other configurations for when LSP attaches to a buffer
+        vim.keymap.set('n', 'K', vim.lsp.buf.hover, { buffer = bufnr })
+        vim.keymap.set('n', '<leader>.d', vim.lsp.buf.definition, { buffer = bufnr })
+        vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, { buffer = bufnr })
+      end
+
+      -- LSP server configurations
       lspconfig.lua_ls.setup({})
       lspconfig.pyright.setup({})
       lspconfig.clangd.setup({})
@@ -52,9 +59,6 @@ return {
         filetypes = { "go", "gomod", "gowork", "gotmpls" },
         root_dir = util.root_pattern { "go.work", "go.mod", "git" },
       })
-      vim.keymap.set('n', 'K', vim.lsp.buf.hover, {})
-      vim.keymap.set('n', '<leader>.d', vim.lsp.buf.definition, {})
-      vim.keymap.set('n', '<leader>ca', vim.lsp.buf.code_action, {})
     end,
     dependencies = {
       "nvimdev/lspsaga.nvim",
@@ -71,3 +75,4 @@ return {
     }
   },
 }
+
