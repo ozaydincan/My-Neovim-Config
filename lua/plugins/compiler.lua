@@ -1,37 +1,19 @@
 return {
-    { -- This plugin
-        "Zeioth/compiler.nvim",
-        cmd = {"CompilerOpen", "CompilerToggleResults", "CompilerRedo"},
-        dependencies = { "stevearc/overseer.nvim", "nvim-telescope/telescope.nvim" },
-        opts = {},
-        config = function ()
-            require'compiler'.setup({})
-        end
-    },
-    { -- The task runner we use
-        "stevearc/overseer.nvim",
-        commit = "6271cab7ccc4ca840faa93f54440ffae3a3918bd",
-        cmd = { "CompilerOpen", "CompilerToggleResults", "CompilerRedo" },
-        opts = {
-            task_list = {
-                direction = "bottom",
-                min_height = 25,
-                max_height = 25,
-                default_detail = 1
-            },
-        },
-    },
-    {
-        -- Open compiler
-vim.api.nvim_set_keymap('n', '<C-r>x', "<cmd>CompilerOpen<cr>", { noremap = true, silent = true }),
+  { -- This plugin
+    "Zeioth/compiler.nvim",
+    cmd = { "CompilerOpen", "CompilerToggleResults", "CompilerRedo" },
+    dependencies = { "stevearc/overseer.nvim", "nvim-telescope/telescope.nvim" },
+    opts = {},
+    config = function()
+      require("compiler").setup({})
 
--- Redo last selected option
-vim.api.nvim_set_keymap('n', '<C-r>r',
-     "<cmd>CompilerStop<cr>" -- (Optional, to dispose all tasks before redo)
-  .. "<cmd>CompilerRedo<cr>",
- { noremap = true, silent = true }),
-
--- Toggle compiler results
-vim.api.nvim_set_keymap('n', '<S-t>', "<cmd>CompilerToggleResults<cr>", { noremap = true, silent = true })
-    }
+      local opts = { noremap = true, silent = true }
+      -- Open compiler
+      vim.keymap.set('n', '<C-r>x', "<cmd>CompilerOpen<cr>", opts)
+      -- Redo last selected option
+      vim.keymap.set('n', '<C-r>r', "<cmd>CompilerStop<cr><cmd>CompilerRedo<cr>", opts)
+      -- Toggle compiler results
+      vim.keymap.set('n', '<S-t>', "<cmd>CompilerToggleResults<cr>", opts)
+    end
+  },
 }

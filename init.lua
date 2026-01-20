@@ -13,11 +13,15 @@ if not (vim.uv or vim.loop).fs_stat(lazypath) then
     os.exit(1)
   end
 end
+
+vim.g.mapleader = " "
+vim.g.maplocalleader = " "
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
 vim.opt.rtp:prepend(lazypath)
-vim.cmd("set number")
 vim.opt.hidden = true
 require("vim-options")
 require("lazy").setup("plugins")
 -- Toggle search highlighting
-vim.api.nvim_set_keymap('n', '<leader>h', ':set hlsearch!<CR>', { noremap = true, silent = true })
-print("Hello Can")
+vim.keymap.set('n', '<leader>h', ':set hlsearch!<CR>', { noremap = true, silent = true })

@@ -6,9 +6,12 @@ return {
             "williamboman/mason.nvim",
             "mfussenegger/nvim-dap",
         },
-        opt = {
-            handler = {},
-        }
+        opts = {
+            handlers = {},
+        },
+        config = function(_, opts)
+            require("mason-nvim-dap").setup(opts)
+        end
     },
     {
         "rcarriga/nvim-dap-ui",

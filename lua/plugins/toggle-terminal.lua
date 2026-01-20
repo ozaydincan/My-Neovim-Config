@@ -6,7 +6,7 @@ return {
     config = function()
       require("toggleterm").setup({
         size = 13,
-        open_mapping = true,
+        open_mapping = [[<c-\>]],
         terminal_mappings = true,
         insert_mappings = true,
         shade_filetypes = {},
@@ -17,8 +17,7 @@ return {
         direction = "horizontal"
       })
 
-      -- Function to set keymaps for terminal mode
-      function _G.set_terminal_keymaps()
+      local function set_terminal_keymaps()
         local opts = {buffer = 0}
         vim.keymap.set('t', '<esc>', [[<C-\><C-n>]], opts)
         vim.keymap.set('t', 'jk', [[<C-\><C-n>]], opts)
@@ -29,12 +28,13 @@ return {
         vim.keymap.set('t', '<C-w>', [[<C-\><C-n><C-w>]], opts)
       end
 
-      -- Apply these mappings for toggleterm only
-      vim.cmd('autocmd! TermOpen term://*toggleterm#* lua set_terminal_keymaps()')
+      vim.api.nvim_create_autocmd("TermOpen", {
+        pattern = "term://*toggleterm#*",
+        callback = set_terminal_keymaps,
+      })
     end,
     keys = {
       {"<leader>to", "<cmd>ToggleTerm<CR>"},
     },
   },
 }
-
