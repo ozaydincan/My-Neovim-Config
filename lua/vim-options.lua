@@ -5,8 +5,13 @@ vim.opt.guicursor = "i:block"
 vim.opt.clipboard:append("unnamedplus")
 
 -- File explorer
-vim.keymap.set('n', '<leader>pv', "<cmd>Yazi cwd<CR>", { noremap = true, silent = true })
-
+if vim.fn.exists(":Yazi") == 2 then
+  vim.keymap.set("n", "<leader>pv", "<cmd>Yazi cwd<CR>", { noremap = true, silent = true })
+else
+  vim.keymap.set("n", "<leader>pv", "<cmd>Ex<CR>", { noremap = true, silent = true })
+end
+-- For new column length
+vim.opt.colorcolumn = "80"
 -- Clipboard support (ensure Neovim is compiled with clipboard support)
 --vim.api.nvim_set_option("clipboard", "unnamedplus") -- Use the system clipboard
 
