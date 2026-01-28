@@ -5,11 +5,17 @@ vim.opt.guicursor = "i:block"
 vim.opt.clipboard:append("unnamedplus")
 
 -- File explorer
-if vim.fn.exists(":Yazi") == 2 then
-  vim.keymap.set("n", "<leader>pv", "<cmd>Yazi cwd<CR>", { noremap = true, silent = true })
-else
-  vim.keymap.set("n", "<leader>pv", "<cmd>Ex<CR>", { noremap = true, silent = true })
-end
+vim.keymap.set("n", "<leader>pv", function()
+  if vim.fn.exists(":Yazi") == 2 then
+    vim.cmd("Yazi cwd")
+    return
+  end
+  if vim.fn.exists(":Neotree") == 2 then
+    vim.cmd("Neotree toggle")
+    return
+  end
+  vim.notify("No file explorer command found", vim.log.levels.WARN)
+end, { noremap = true, silent = true })
 -- For new column length
 vim.opt.colorcolumn = "80"
 -- Clipboard support (ensure Neovim is compiled with clipboard support)
