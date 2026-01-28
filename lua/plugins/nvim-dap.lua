@@ -8,31 +8,45 @@ return {
         },
         opts = {
             handlers = {},
+            ensure_installed = {
+                "codelldb",
+                "delve",
+            },
         },
         config = function(_, opts)
             require("mason-nvim-dap").setup(opts)
         end
     },
     {
-        "rcarriga/nvim-dap-ui",
-        dependencies = "mfussenegger/nvim-dap",
+        "mxsdev/nvim-dap-vscode-js",
         event = "VeryLazy",
+        dependencies = {
+            "mfussenegger/nvim-dap",
+            {
+                "microsoft/vscode-js-debug",
+                version = "1.*",
+                build = "npm install --legacy-peer-deps && npm run build",
+            },
+        },
+        config = function()
+            require("dap-vscode-js").setup({
+                debugger_path = vim.fn.stdpath("data") .. "/lazy/vscode-js-debug",
+                adapters = { "pwa-node", "pwa-chrome", "node-terminal", "pwa-extensionHost" },
+            })
+        end,
     },
     {
         "mfussenegger/nvim-dap",
         dependencies = {
             "leoluz/nvim-dap-go",
-            "rcarriga/nvim-dap-ui",
             "theHamsta/nvim-dap-virtual-text",
-            "nvim-neotest/nvim-nio",
+            "jay-babu/mason-nvim-dap.nvim",
             "williamboman/mason.nvim",
         },
 
         config = function()
             local dap = require "dap"
-            local ui = require "dapui"
 
-            require("dapui").setup()
             require("dap-go").setup()
 
             require("nvim-dap-virtual-text").setup {
@@ -109,14 +123,66 @@ return {
                     -- runInTerminal = false,
                 },
             }
-            dap.configurations.c = dap.configurations.cpp
+            dap.configurations.c = {
+                {
+                    name = "Launch (gdb)",
+                    type = "gdb",
+                    request = "launch",
+                    program = function()
+                        return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+                    end,
+                    cwd = "${workspaceFolder}",
+                    stopOnEntry = false,
+                },
+            }
+
+            dap.adapters.gdb = {
+                type = "executable",
+                command = "gdb",
+                args = { "--interpreter=dap", "--quiet" },
+            }
+
+            local js_ts_configs = {
+                {
+                    type = "pwa-node",
+                    request = "launch",
+                    name = "Launch file (Node)",
+                    program = "${file}",
+                    cwd = "${workspaceFolder}",
+                    sourceMaps = true,
+                    protocol = "inspector",
+                },
+                {
+                    type = "pwa-node",
+                    request = "attach",
+                    name = "Attach (Node)",
+                    processId = require("dap.utils").pick_process,
+                    cwd = "${workspaceFolder}",
+                },
+                {
+                    type = "pwa-chrome",
+                    request = "launch",
+                    name = "Launch Chrome",
+                    url = function()
+                        return vim.fn.input("URL: ", "http://localhost:5173", "file")
+                    end,
+                    webRoot = "${workspaceFolder}",
+                    sourceMaps = true,
+                },
+            }
+
+            dap.configurations.javascript = js_ts_configs
+            dap.configurations.javascriptreact = js_ts_configs
+            dap.configurations.typescript = js_ts_configs
+            dap.configurations.typescriptreact = js_ts_configs
+            dap.configurations.svelte = js_ts_configs
 
             vim.keymap.set("n", "<space>b", dap.toggle_breakpoint)
             vim.keymap.set("n", "<space>gb", dap.run_to_cursor)
 
             -- Eval var under cursor
             vim.keymap.set("n", "<space>?", function()
-                require("dapui").eval(nil, { enter = true })
+                require("dap.ui.widgets").hover()
             end)
 
             vim.keymap.set("n", "<leader>dbc", dap.continue)
@@ -125,19 +191,6 @@ return {
             vim.keymap.set("n", "<F4>", dap.step_out)
             vim.keymap.set("n", "<F5>", dap.step_back)
             vim.keymap.set("n", "<F13>", dap.restart)
-
-            dap.listeners.before.attach.dapui_config = function()
-                ui.open()
-            end
-            dap.listeners.before.launch.dapui_config = function()
-                ui.open()
-            end
-            dap.listeners.before.event_terminated.dapui_config = function()
-                ui.close()
-            end
-            dap.listeners.before.event_exited.dapui_config = function()
-                ui.close()
-            end
         end,
     },
 }
