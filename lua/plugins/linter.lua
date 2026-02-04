@@ -64,6 +64,12 @@ return {
             local cargo = vim.fs.find("Cargo.toml", { path = dir, upward = true })[1]
             local root = cargo and vim.fs.dirname(cargo) or dir
             lint.try_lint(nil, { cwd = root })
+          elseif ft == "c" or ft == "cpp" then
+            local bufname = vim.api.nvim_buf_get_name(0)
+            local dir = bufname ~= "" and vim.fs.dirname(bufname) or vim.loop.cwd()
+            local makefile = vim.fs.find("Makefile", { path = dir, upward = true })[1]
+            local root = makefile and vim.fs.dirname(makefile) or vim.fs.root(dir, { ".git" }) or dir
+            lint.try_lint(nil, { cwd = root })
           else
             lint.try_lint()
           end

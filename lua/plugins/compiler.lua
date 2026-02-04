@@ -3,17 +3,37 @@ return {
     "Zeioth/compiler.nvim",
     cmd = { "CompilerOpen", "CompilerToggleResults", "CompilerRedo" },
     dependencies = { "stevearc/overseer.nvim", "nvim-telescope/telescope.nvim" },
+    keys = {
+      {
+        "<leader>co",
+        function()
+          local buf = vim.api.nvim_buf_get_name(0)
+          local start = buf ~= "" and vim.fs.dirname(buf) or vim.loop.cwd()
+          local makefile = vim.fs.find("Makefile", { path = start, upward = true })[1]
+          local root = makefile and vim.fs.dirname(makefile) or vim.fs.root(start, { ".git" }) or start
+          vim.cmd("lcd " .. vim.fn.fnameescape(root))
+          vim.cmd("CompilerOpen")
+        end,
+        desc = "Compiler open",
+      },
+      {
+        "<leader>cr",
+        function()
+          local buf = vim.api.nvim_buf_get_name(0)
+          local start = buf ~= "" and vim.fs.dirname(buf) or vim.loop.cwd()
+          local makefile = vim.fs.find("Makefile", { path = start, upward = true })[1]
+          local root = makefile and vim.fs.dirname(makefile) or vim.fs.root(start, { ".git" }) or start
+          vim.cmd("lcd " .. vim.fn.fnameescape(root))
+          vim.cmd("CompilerStop")
+          vim.cmd("CompilerRedo")
+        end,
+        desc = "Compiler redo",
+      },
+      { "<leader>ct", "<cmd>CompilerToggleResults<cr>", desc = "Compiler toggle results" },
+    },
     opts = {},
     config = function()
       require("compiler").setup({})
-
-      local opts = { noremap = true, silent = true }
-      -- Open compiler
-      vim.keymap.set('n', '<C-r>x', "<cmd>CompilerOpen<cr>", opts)
-      -- Redo last selected option
-      vim.keymap.set('n', '<C-r>r', "<cmd>CompilerStop<cr><cmd>CompilerRedo<cr>", opts)
-      -- Toggle compiler results
-      vim.keymap.set('n', '<S-t>', "<cmd>CompilerToggleResults<cr>", opts)
     end
   },
 }
