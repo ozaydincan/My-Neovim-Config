@@ -69,6 +69,26 @@ install_lua() {
   fi
 }
 
+check_nvim_version() {
+  if ! require_cmd nvim; then
+    log "Neovim not found after install."
+    exit 1
+  fi
+  local ver
+  ver="$(nvim --version | head -n1 | sed -E 's/^NVIM v//')"
+  local major minor
+  major="$(printf "%s" "$ver" | cut -d. -f1)"
+  minor="$(printf "%s" "$ver" | cut -d. -f2)"
+  if [[ -z "$major" || -z "$minor" ]]; then
+    log "Unable to parse Neovim version: $ver"
+    exit 1
+  fi
+  if [[ "$major" -lt 0 || ( "$major" -eq 0 && "$minor" -lt 11 ) ]]; then
+    log "Neovim $ver is too old. Require >= 0.11."
+    exit 1
+  fi
+}
+
 setup_mac() {
   log "Installing base packages (macOS)..."
   brew update
@@ -122,6 +142,8 @@ else
   log "Unsupported OS: $OS"
   exit 1
 fi
+
+check_nvim_version
 
 should_clone=true
 if [[ -e "$TARGET_DIR" && -n "$(ls -A "$TARGET_DIR" 2>/dev/null)" ]]; then
