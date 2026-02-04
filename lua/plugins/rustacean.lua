@@ -24,11 +24,22 @@ return {
                         cargo = {
                             allFeatures = true,
                         },
+                        assist = {
+                            importGranularity = "module",
+                            importPrefix = "by_self",
+                            emitMustUse = true,
+                            expressionFillDefault = "todo",
+                        },
+                        checkOnSave = true,
+                        check = {
+                            command = "clippy",
+                        },
                     },
                 },
             },
             dap = {
                 adapter = cfg.get_codelldb_adapter(codelldb_path, liblldb_path),
+                autoload_configurations = false,
             },
         }
     end,

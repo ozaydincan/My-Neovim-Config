@@ -24,4 +24,4 @@ vim.opt.hidden = true
 require("vim-options")
 require("lazy").setup("plugins")
 -- Toggle search highlighting
-vim.keymap.set('n', '<leader>h', ':set hlsearch!<CR>', { noremap = true, silent = true })
+vim.keymap.set('n', '<leader>h', ':set hlsearch!<CR>', { noremap = true, silent = true, desc = "Toggle search highlight" })

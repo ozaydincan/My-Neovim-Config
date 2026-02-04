@@ -49,6 +49,7 @@ return {
 
             require("dap-go").setup()
 
+
             require("nvim-dap-virtual-text").setup {
                 -- This just tries to mitigate the chance that I leak tokens here. Probably won't stop it from happening...
                 display_callback = function(variable)
@@ -135,6 +136,31 @@ return {
                     stopOnEntry = false,
                 },
             }
+            dap.configurations.rust = {
+                {
+                    name = "Launch (codelldb)",
+                    type = "codelldb",
+                    request = "launch",
+                    program = function()
+                        local cargo_toml = vim.fs.find("Cargo.toml", { upward = true })[1]
+                        if not cargo_toml then
+                            return vim.fn.input("Path to executable: ", vim.fn.getcwd() .. "/", "file")
+                        end
+                        local root = vim.fs.dirname(cargo_toml)
+                        local meta_line = vim.fn.systemlist("cargo metadata --no-deps --format-version=1 --manifest-path " .. vim.fn.shellescape(cargo_toml))[1]
+                        local ok, meta = pcall(vim.json.decode, meta_line or "")
+                        local crate = ok and meta and meta.packages and meta.packages[1] and meta.packages[1].name or ""
+                        local exe = root .. "/target/debug/" .. crate
+                        if crate ~= "" and vim.fn.executable(exe) == 1 then
+                            return exe
+                        end
+                        return vim.fn.input("Path to executable: ", root .. "/target/debug/", "file")
+                    end,
+                    cwd = "${workspaceFolder}",
+                    stopOnEntry = true,
+                    runInTerminal = false,
+                },
+            }
 
             dap.adapters.gdb = {
                 type = "executable",
@@ -180,17 +206,13 @@ return {
             vim.keymap.set("n", "<space>b", dap.toggle_breakpoint)
             vim.keymap.set("n", "<space>gb", dap.run_to_cursor)
 
-            -- Eval var under cursor
-            vim.keymap.set("n", "<space>?", function()
-                require("dap.ui.widgets").hover()
-            end)
 
-            vim.keymap.set("n", "<leader>dbc", dap.continue)
-            vim.keymap.set("n", "<leader>ds", dap.step_into)
-            vim.keymap.set("n", "<leader>do", dap.step_over)
-            vim.keymap.set("n", "<F4>", dap.step_out)
-            vim.keymap.set("n", "<F5>", dap.step_back)
-            vim.keymap.set("n", "<F13>", dap.restart)
+            vim.keymap.set("n", "<leader>dbc", dap.continue, { desc = "DAP continue" })
+            vim.keymap.set("n", "<leader>ds", dap.step_into, { desc = "DAP step into" })
+            vim.keymap.set("n", "<leader>do", dap.step_over, { desc = "DAP step over" })
+            vim.keymap.set("n", "<leader>du", dap.step_out, { desc = "DAP step out" })
+            vim.keymap.set("n", "<leader>dg", dap.step_back, { desc = "DAP step back" })
+            vim.keymap.set("n", "<leader>dr", dap.restart, { desc = "DAP restart" })
         end,
     },
 }

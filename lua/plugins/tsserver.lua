@@ -15,7 +15,15 @@ return {
                 },
                 tsserver_file_preferences = {
                     includeInlayParameterNameHints = "all",
+                    includeInlayParameterNameHintsWhenArgumentMatchesName = false,
                     includeCompletionsForModuleExports = true,
+                    includeCompletionsWithInsertText = true,
+                    includeCompletionsForImportStatements = true,
+                    includeInlayVariableTypeHints = true,
+                    includeInlayFunctionParameterTypeHints = true,
+                    includeInlayPropertyDeclarationTypeHints = true,
+                    includeInlayFunctionLikeReturnTypeHints = true,
+                    includeInlayEnumMemberValueHints = true,
                     quotePreference = "auto",
                 },
                 tsserver_format_options = {
