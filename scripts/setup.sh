@@ -21,12 +21,18 @@ cleanup_broken_yazi() {
 # --- Runtimes & Dependencies ---
 
 install_rust() {
-  if ! require_cmd cargo; then
+  if ! require_cmd rustup; then
     log "Installing rustup (Cargo/Rust)..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   fi
+  
   # shellcheck disable=SC1091
   source "$HOME/.cargo/env"
+  
+  # FIX: Explicitly set the default toolchain to avoid the "no default configured" error
+  log "Configuring default Rust toolchain (stable)..."
+  rustup default stable
+  
   log "Updating Rust toolchain..."
   rustup update
   rustup component add clippy || true
@@ -49,23 +55,19 @@ setup_mac() {
 setup_ubuntu() {
   log "Installing base runtimes (Ubuntu)..."
   sudo apt-get update
-  # build-essential covers the make and gcc requirement for yazi
   sudo apt-get install -y software-properties-common curl git unzip xclip ripgrep fd-find \
     python3 python3-pip python3-venv gcc g++ build-essential lua5.4
 
-  # Link fd-find to fd (Ubuntu specific)
   if ! require_cmd fd && require_cmd fdfind; then
     sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
   fi
 
-  # Install modern Node.js
   if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 18 ]]; then
     log "Installing Node.js 20..."
     curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
     sudo apt-get install -y nodejs
   fi
 
-  # Install Neovim Unstable PPA
   if ! require_cmd nvim; then
     log "Adding Neovim PPA..."
     sudo add-apt-repository -y ppa:neovim-ppa/unstable
@@ -76,12 +78,11 @@ setup_ubuntu() {
   cleanup_broken_yazi
   install_rust
 
-  # Build Yazi via official crates.io wrapper
   if ! require_cmd yazi; then
-    log "Compiling Yazi from source via Cargo (this may take a few minutes)..."
-    # shellcheck disable=SC1091
+    log "Compiling Yazi from source via Cargo..."
+    # Ensure cargo is available in current subshell
     source "$HOME/.cargo/env"
-    cargo install --force yazi-build
+    cargo install --locked --force yazi-build
   fi
 }
 
