@@ -6,7 +6,7 @@ Optimized for macOS and Ubuntu 22.04.
 ## Quick Start
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ozaydincan/My-Neovim-Config/develeopment/scripts/setup.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ozaydincan/My-Neovim-Config/development/scripts/setup.sh)"
 ```
 
 For details on the one-command installer, see `SETUP.md`.
