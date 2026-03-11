@@ -48,7 +48,7 @@ install_pip_tools() {
 install_npm_tools() {
   if require_cmd npm; then
     log "Installing Node tools..."
-    npm install -g eslint_d prettierd
+    npm install -g eslint_d @fsouza/prettierd
   fi
 }
 
