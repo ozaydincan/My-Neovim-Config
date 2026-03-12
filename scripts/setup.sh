@@ -63,11 +63,14 @@ setup_ubuntu() {
 
   # Install Node.js 22 LTS to satisfy vscode-js-debug requirements
   if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 22 ]]; then
+    log "Purging conflicting legacy Node packages..."
+    sudo apt-get remove --purge -y nodejs libnode-dev npm || true
+    sudo apt-get autoremove -y
+    
     log "Installing Node.js 22 LTS..."
     curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt-get install -y nodejs
   fi
-
   # Install Neovim Unstable PPA
   if ! require_cmd nvim; then
     log "Adding Neovim PPA..."
