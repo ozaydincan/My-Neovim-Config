@@ -61,10 +61,10 @@ setup_ubuntu() {
     sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
   fi
 
-  # Install modern Node.js
-  if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 18 ]]; then
-    log "Installing Node.js 20..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  # Install Node.js 22 LTS to satisfy vscode-js-debug requirements
+  if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 22 ]]; then
+    log "Installing Node.js 22 LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt-get install -y nodejs
   fi
 
@@ -84,7 +84,7 @@ setup_ubuntu() {
     log "Compiling Yazi from source via Cargo (this may take a few minutes)..."
     # shellcheck disable=SC1091
     source "$HOME/.cargo/env"
-    cargo install --force yazi-build
+    cargo install --locked yazi-fm yazi-cli
   fi
 }
 
@@ -128,25 +128,24 @@ fi
 
 update_shell_path
 
-# Ensure a pristine environment for Neovim
-log "Preparing a clean slate for Neovim..."
-TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
-safe_backup "$TARGET_DIR" "$TIMESTAMP"
-safe_backup "$HOME/.local/share/nvim" "$TIMESTAMP"
-safe_backup "$HOME/.local/state/nvim" "$TIMESTAMP"
-safe_backup "$HOME/.cache/nvim" "$TIMESTAMP"
+# Ensure a pristine environment for Neovim while preventing self-deletion
+if [[ "$PWD" == "$TARGET_DIR"* ]]; then
+  warn "Running from within target directory. Skipping clone and backup to prevent script crash."
+else
+  log "Preparing a clean slate for Neovim..."
+  TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+  safe_backup "$TARGET_DIR" "$TIMESTAMP"
+  safe_backup "$HOME/.local/share/nvim" "$TIMESTAMP"
+  safe_backup "$HOME/.local/state/nvim" "$TIMESTAMP"
+  safe_backup "$HOME/.cache/nvim" "$TIMESTAMP"
 
-log "Cloning config to $TARGET_DIR..."
-git clone "$REPO_URL" "$TARGET_DIR"
+  log "Cloning config to $TARGET_DIR..."
+  git clone "$REPO_URL" "$TARGET_DIR"
+fi
 
+# Run the headless plugin clone. Mason tools will install asynchronously on the first real launch.
 log "Running headless sync..."
-nvim --headless \
-  "+Lazy! sync" \
-  "+TSUpdateSync" \
-  "+MasonInstall \
-    lua-language-server gopls pyright clangd svelte-language-server codelldb delve \
-    black isort pylint cpplint eslint_d @fsouza/prettierd stylua goimports" \
-  +qa || true
+nvim --headless "+Lazy! sync" +qa || true
 
 log "SUCCESS! Restart your terminal and run 'nvim' to begin."
 
