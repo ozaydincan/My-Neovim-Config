@@ -1,5 +1,6 @@
 return {
   "nvim-treesitter/nvim-treesitter",
+  branch = "master",
   build = ":TSUpdate",
   event = { "BufReadPost", "BufNewFile" },
   opts = {
@@ -25,7 +26,14 @@ return {
     indent = { enable = true },
   },
   config = function(_, opts)
-    require("nvim-treesitter.configs").setup(opts)
+    -- Protected call to ensure fresh installs don't crash the bootstrap sequence
+    local status_ok, treesitter_configs = pcall(require, "nvim-treesitter.configs")
+    if not status_ok then
+      return
+    end
+
+    treesitter_configs.setup(opts)
+
     -- Guard against malformed captures in #nth? predicates on some parser versions.
     vim.treesitter.query.add_predicate("nth?", function(match, _pattern, _bufnr, pred)
       local node = match[pred[2]]
@@ -45,9 +53,13 @@ return {
 
       return false
     end, { force = true, all = false })
+
     -- Guard against list captures in #is? predicates on 0.11+.
     vim.treesitter.query.add_predicate("is?", function(match, _pattern, bufnr, pred)
-      local locals = require("nvim-treesitter.locals")
+      -- Protected call here as well, just in case a query runs early
+      local locals_ok, locals = pcall(require, "nvim-treesitter.locals")
+      if not locals_ok then return true end
+
       local node = match[pred[2]]
       if type(node) == "table" then
         node = node[#node]
@@ -61,6 +73,7 @@ return {
       local _, _, kind = locals.find_definition(node, bufnr)
       return vim.tbl_contains(types, kind)
     end, { force = true, all = false })
+
     -- Guard against list/nil captures in #has-parent?/#has-ancestor? predicates.
     local function has_ancestor(match, _pattern, _bufnr, pred)
       local node = match[pred[2]]
@@ -86,6 +99,7 @@ return {
       end
       return false
     end
+    
     vim.treesitter.query.add_predicate("has-ancestor?", has_ancestor, { force = true, all = false })
     vim.treesitter.query.add_predicate("has-parent?", has_ancestor, { force = true, all = false })
   end,
