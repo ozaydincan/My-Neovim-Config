@@ -2,27 +2,23 @@ return {
 	{
 		"williamboman/mason.nvim",
 		lazy = false,
-		config = function()
-			require("mason").setup()
-		end,
+		config = true, -- Modern lazy shortcut: automatically calls require("mason").setup()
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
 		lazy = false,
 		opts = {
-			auto_install = false, -- We let ensure_installed strictly dictate what gets downloaded
+			auto_install = false,
 			ensure_installed = {
 				"lua_ls",
 				"gopls",
 				"zls",
 				"pyright",
 				"clangd",
-				-- Just add new servers here to auto-install them!
+				"ruff", -- Added Ruff for Python formatting & import sorting
 			},
 		},
-		config = function(_, opts)
-			require("mason-lspconfig").setup(opts)
-		end,
+		config = true, -- Modern lazy shortcut
 	},
 	{
 		"neovim/nvim-lspconfig",
@@ -53,10 +49,15 @@ return {
 							analysis = {
 								typeCheckingMode = "basic",
 								autoImportCompletions = true,
+								logLevel = "Warning",
 								useLibraryCodeForTypes = true,
 							},
 						},
 					},
+				},
+				ruff = {
+					-- Ruff requires zero extra configuration to handle imports/linting perfectly
+					capabilities = capabilities,
 				},
 				clangd = {
 					capabilities = capabilities,

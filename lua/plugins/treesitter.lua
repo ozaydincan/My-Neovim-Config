@@ -12,12 +12,30 @@ return {
 			"rust",
 			"lua",
 			"go",
+			"markdown",
+			"markdown_inline",
 		},
 		sync_install = false,
 		highlight = { enable = true },
 		indent = { enable = true },
 	},
 	config = function(_, opts)
+		-- THE FIX: Patch core Neovim 0.12/0.11 get_node_text for list captures.
+		-- This intercepts captures before they crash LSP hover and Markdown injections.
+		local ts = vim.treesitter
+		local original_get_node_text = ts.get_node_text
+
+		---@diagnostic disable-next-line: duplicate-set-field
+		ts.get_node_text = function(node, source, metadata)
+			if type(node) == "table" then
+				node = node[#node]
+			end
+			if not node then
+				return ""
+			end
+			return original_get_node_text(node, source, metadata)
+		end
+
 		-- Protected call to ensure fresh installs don't crash the bootstrap sequence
 		local status_ok, treesitter_configs = pcall(require, "nvim-treesitter.configs")
 		if not status_ok then
@@ -25,76 +43,5 @@ return {
 		end
 
 		treesitter_configs.setup(opts)
-
-		-- Guard against malformed captures in #nth? predicates on some parser versions.
-		vim.treesitter.query.add_predicate("nth?", function(match, _pattern, _bufnr, pred)
-			local node = match[pred[2]]
-			if type(node) == "table" then
-				node = node[#node]
-			end
-			local n = tonumber(pred[3])
-
-			if not node or not node.parent then
-				return false
-			end
-
-			local parent = node:parent()
-			if parent and parent:named_child_count() > n then
-				return parent:named_child(n) == node
-			end
-
-			return false
-		end, { force = true, all = false })
-
-		-- Guard against list captures in #is? predicates on 0.11+.
-		vim.treesitter.query.add_predicate("is?", function(match, _pattern, bufnr, pred)
-			-- Protected call here as well, just in case a query runs early
-			local locals_ok, locals = pcall(require, "nvim-treesitter.locals")
-			if not locals_ok then
-				return true
-			end
-
-			local node = match[pred[2]]
-			if type(node) == "table" then
-				node = node[#node]
-			end
-
-			if not node then
-				return true
-			end
-
-			local types = { unpack(pred, 3) }
-			local _, _, kind = locals.find_definition(node, bufnr)
-			return vim.tbl_contains(types, kind)
-		end, { force = true, all = false })
-
-		-- Guard against list/nil captures in #has-parent?/#has-ancestor? predicates.
-		local function has_ancestor(match, _pattern, _bufnr, pred)
-			local node = match[pred[2]]
-			if type(node) == "table" then
-				node = node[#node]
-			end
-			if not node or not node.parent then
-				return true
-			end
-
-			local ancestor_types = { unpack(pred, 3) }
-			local just_direct_parent = pred[1]:find("has-parent", 1, true)
-			node = node:parent()
-			while node do
-				if vim.tbl_contains(ancestor_types, node:type()) then
-					return true
-				end
-				if just_direct_parent then
-					node = nil
-				else
-					node = node:parent()
-				end
-			end
-			return false
-		end
-
-		vim.treesitter.query.add_predicate("has-ancestor?", has_ancestor, { force = true, all = false })
-		vim.treesitter.query.add_predicate("has-parent?", has_ancestor, { force = true, all = false })
 	end,
 }
