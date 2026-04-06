@@ -21,15 +21,13 @@ cleanup_broken_yazi() {
 # --- Runtimes & Dependencies ---
 
 install_rust() {
-  if ! require_cmd rustup; then
+  if ! require_cmd cargo; then
     log "Installing rustup (Cargo/Rust)..."
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
   fi
-  
   # shellcheck disable=SC1091
   source "$HOME/.cargo/env"
   
-  # FIX: Explicitly set the default toolchain to avoid the "no default configured" error
   log "Configuring default Rust toolchain (stable)..."
   rustup default stable
   
@@ -58,16 +56,22 @@ setup_ubuntu() {
   sudo apt-get install -y software-properties-common curl git unzip xclip ripgrep fd-find \
     python3 python3-pip python3-venv gcc g++ build-essential lua5.4
 
+  # Link fd-find to fd (Ubuntu specific)
   if ! require_cmd fd && require_cmd fdfind; then
     sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
   fi
 
-  if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 18 ]]; then
-    log "Installing Node.js 20..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+  # Install Node.js 22 LTS to satisfy vscode-js-debug requirements
+  if ! require_cmd node || [[ $(node -v | cut -d. -f1 | tr -d 'v') -lt 22 ]]; then
+    log "Purging conflicting legacy Node packages..."
+    sudo apt-get remove --purge -y nodejs libnode-dev npm || true
+    sudo apt-get autoremove -y
+    
+    log "Installing Node.js 22 LTS..."
+    curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
     sudo apt-get install -y nodejs
   fi
-
+  # Install Neovim Unstable PPA
   if ! require_cmd nvim; then
     log "Adding Neovim PPA..."
     sudo add-apt-repository -y ppa:neovim-ppa/unstable
@@ -78,11 +82,12 @@ setup_ubuntu() {
   cleanup_broken_yazi
   install_rust
 
+  # Build Yazi via official crates.io wrapper
   if ! require_cmd yazi; then
-    log "Compiling Yazi from source via Cargo..."
-    # Ensure cargo is available in current subshell
+    log "Compiling Yazi from source via Cargo (this may take a few minutes)..."
+    # shellcheck disable=SC1091
     source "$HOME/.cargo/env"
-    cargo install --locked --force yazi-build
+    cargo install --locked yazi-fm yazi-cli
   fi
 }
 
@@ -101,6 +106,18 @@ update_shell_path() {
   fi
 }
 
+# --- Clean State Preparation ---
+
+safe_backup() {
+  local dir="$1"
+  local timestamp="$2"
+  if [[ -d "$dir" ]]; then
+    local backup_path="${dir}.bak.${timestamp}"
+    warn "Existing data found. Backing up $dir -> $backup_path"
+    mv "$dir" "$backup_path"
+  fi
+}
+
 # --- Execution ---
 
 OS="$(uname -s)"
@@ -114,23 +131,24 @@ fi
 
 update_shell_path
 
-if [[ -d "$TARGET_DIR" ]]; then
-  backup_dir="${TARGET_DIR}.bak.$(date +%Y%m%d_%H%M%S)"
-  warn "Existing config found. Backing up to $backup_dir"
-  mv "$TARGET_DIR" "$backup_dir"
+# Ensure a pristine environment for Neovim while preventing self-deletion
+if [[ "$PWD" == "$TARGET_DIR"* ]]; then
+  warn "Running from within target directory. Skipping clone and backup to prevent script crash."
+else
+  log "Preparing a clean slate for Neovim..."
+  TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
+  safe_backup "$TARGET_DIR" "$TIMESTAMP"
+  safe_backup "$HOME/.local/share/nvim" "$TIMESTAMP"
+  safe_backup "$HOME/.local/state/nvim" "$TIMESTAMP"
+  safe_backup "$HOME/.cache/nvim" "$TIMESTAMP"
+
+  log "Cloning config to $TARGET_DIR..."
+  git clone "$REPO_URL" "$TARGET_DIR"
 fi
 
-log "Cloning config to $TARGET_DIR..."
-git clone "$REPO_URL" "$TARGET_DIR"
-
+# Run the headless plugin clone. Mason tools will install asynchronously on the first real launch.
 log "Running headless sync..."
-nvim --headless \
-  "+Lazy! sync" \
-  "+TSUpdateSync" \
-  "+MasonInstall \
-    lua-language-server gopls pyright clangd svelte-language-server codelldb delve \
-    black isort pylint cpplint eslint_d @fsouza/prettierd stylua goimports" \
-  +qa || true
+nvim --headless "+Lazy! sync" +qa || true
 
 log "SUCCESS! Restart your terminal and run 'nvim' to begin."
 

@@ -1,106 +1,104 @@
 return {
-  "nvim-treesitter/nvim-treesitter",
-  branch = "master",
-  build = ":TSUpdate",
-  event = { "BufReadPost", "BufNewFile" },
-  opts = {
-    auto_install = true,
-    ensure_installed = {
-      "cpp",
-      "python",
-      "c",
-      "rust",
-      "lua",
-      "vim",
-      "vimdoc",
-      "query",
-      "elixir",
-      "heex",
-      "javascript",
-      "html",
-      "svelte",
-      "go",
-    },
-    sync_install = false,
-    highlight = { enable = true },
-    indent = { enable = true },
-  },
-  config = function(_, opts)
-    -- Protected call to ensure fresh installs don't crash the bootstrap sequence
-    local status_ok, treesitter_configs = pcall(require, "nvim-treesitter.configs")
-    if not status_ok then
-      return
-    end
+	{
+		"williamboman/mason.nvim",
+		lazy = false,
+		config = true, -- Modern lazy shortcut: automatically calls require("mason").setup()
+	},
+	{
+		"williamboman/mason-lspconfig.nvim",
+		lazy = false,
+		opts = {
+			auto_install = false,
+			ensure_installed = {
+				"lua_ls",
+				"gopls",
+				"zls",
+				"pyright",
+				"clangd",
+				"ruff", -- Added Ruff for Python formatting & import sorting
+			},
+		},
+		config = true, -- Modern lazy shortcut
+	},
+	{
+		"neovim/nvim-lspconfig",
+		lazy = false,
+		config = function()
+			local capabilities = vim.lsp.protocol.make_client_capabilities()
 
-    treesitter_configs.setup(opts)
+			-- Safely load blink.cmp so the script doesn't crash on a fresh install
+			local ok_blink, blink = pcall(require, "blink.cmp")
+			if ok_blink and blink.get_lsp_capabilities then
+				capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities())
+			end
 
-    -- Guard against malformed captures in #nth? predicates on some parser versions.
-    vim.treesitter.query.add_predicate("nth?", function(match, _pattern, _bufnr, pred)
-      local node = match[pred[2]]
-      if type(node) == "table" then
-        node = node[#node]
-      end
-      local n = tonumber(pred[3])
+			-- 1. Define all server configurations in a single, clean dictionary
+			local servers = {
+				lua_ls = {
+					capabilities = capabilities,
+					---@type lspconfig.settings.lua_ls
+					settings = {
+						Lua = {}, -- lazydev securely handles the Neovim workspace injection
+					},
+				},
+				pyright = {
+					capabilities = capabilities,
+					---@type lspconfig.settings.pyright
+					settings = {
+						python = {
+							analysis = {
+								typeCheckingMode = "basic",
+								autoImportCompletions = true,
+								logLevel = "Warning",
+								useLibraryCodeForTypes = true,
+							},
+						},
+					},
+				},
+				ruff = {
+					-- Ruff requires zero extra configuration to handle imports/linting perfectly
+					capabilities = capabilities,
+				},
+				clangd = {
+					capabilities = capabilities,
+					cmd = {
+						"clangd",
+						"--background-index",
+						"--clang-tidy",
+						"--completion-style=detailed",
+						"--all-scopes-completion",
+						"--cross-file-rename",
+					},
+				},
+				gopls = {
+					capabilities = capabilities,
+					---@type lspconfig.settings.gopls
+					settings = {
+						gopls = {
+							staticcheck = true,
+							usePlaceholders = true,
+							completeUnimported = true,
+							gofumpt = true,
+							analyses = {
+								unusedparams = true,
+								unusedwrite = true,
+								nilness = true,
+								shadow = true,
+							},
+						},
+					},
+				},
+				zls = {
+					capabilities = capabilities,
+				},
+			}
 
-      if not node or not node.parent then
-        return false
-      end
-
-      local parent = node:parent()
-      if parent and parent:named_child_count() > n then
-        return parent:named_child(n) == node
-      end
-
-      return false
-    end, { force = true, all = false })
-
-    -- Guard against list captures in #is? predicates on 0.11+.
-    vim.treesitter.query.add_predicate("is?", function(match, _pattern, bufnr, pred)
-      -- Protected call here as well, just in case a query runs early
-      local locals_ok, locals = pcall(require, "nvim-treesitter.locals")
-      if not locals_ok then return true end
-
-      local node = match[pred[2]]
-      if type(node) == "table" then
-        node = node[#node]
-      end
-
-      if not node then
-        return true
-      end
-
-      local types = { unpack(pred, 3) }
-      local _, _, kind = locals.find_definition(node, bufnr)
-      return vim.tbl_contains(types, kind)
-    end, { force = true, all = false })
-
-    -- Guard against list/nil captures in #has-parent?/#has-ancestor? predicates.
-    local function has_ancestor(match, _pattern, _bufnr, pred)
-      local node = match[pred[2]]
-      if type(node) == "table" then
-        node = node[#node]
-      end
-      if not node or not node.parent then
-        return true
-      end
-
-      local ancestor_types = { unpack(pred, 3) }
-      local just_direct_parent = pred[1]:find("has-parent", 1, true)
-      node = node:parent()
-      while node do
-        if vim.tbl_contains(ancestor_types, node:type()) then
-          return true
-        end
-        if just_direct_parent then
-          node = nil
-        else
-          node = node:parent()
-        end
-      end
-      return false
-    end
-    
-    vim.treesitter.query.add_predicate("has-ancestor?", has_ancestor, { force = true, all = false })
-    vim.treesitter.query.add_predicate("has-parent?", has_ancestor, { force = true, all = false })
-  end,
+			-- 2. Loop through and activate everything automatically
+			for name, config in pairs(servers) do
+				---@cast config vim.lsp.Config
+				vim.lsp.config(name, config)
+				vim.lsp.enable(name)
+			end
+		end,
+	},
 }
