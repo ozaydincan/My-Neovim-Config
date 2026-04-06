@@ -6,7 +6,7 @@ clones the config into `~/.config/nvim`, and installs Neovim plugins and tools.
 ## Quick Start (macOS or Ubuntu 22.04)
 
 ```bash
-bash -c "$(curl -fsSL https://raw.githubusercontent.com/ozaydincan/My-Neovim-Config/main/scripts/setup.sh)"
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/ozaydincan/My-Neovim-Config/development/scripts/setup.sh)"
 ```
 
 ## What It Does
