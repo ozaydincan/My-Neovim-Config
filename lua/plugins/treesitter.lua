@@ -1,104 +1,43 @@
 return {
-	{
-		"williamboman/mason.nvim",
-		lazy = false,
-		config = true, -- Modern lazy shortcut: automatically calls require("mason").setup()
-	},
-	{
-		"williamboman/mason-lspconfig.nvim",
-		lazy = false,
-		opts = {
-			auto_install = false,
-			ensure_installed = {
-				"lua_ls",
-				"gopls",
-				"zls",
-				"pyright",
-				"clangd",
-				"ruff", -- Added Ruff for Python formatting & import sorting
-			},
+	"nvim-treesitter/nvim-treesitter",
+	branch = "master",
+	build = ":TSUpdate",
+	event = { "BufReadPost", "BufNewFile" },
+	opts = {
+		auto_install = true,
+		ensure_installed = {
+			"cpp",
+			"python",
+			"c",
+			"rust",
+			"lua",
+			"go",
 		},
-		config = true, -- Modern lazy shortcut
+		sync_install = false,
+		highlight = { enable = true },
+		indent = { enable = true },
 	},
-	{
-		"neovim/nvim-lspconfig",
-		lazy = false,
-		config = function()
-			local capabilities = vim.lsp.protocol.make_client_capabilities()
+	config = function(_, opts)
+		-- THE FIX: Patch core Neovim 0.12/0.11 get_node_text for list captures.
+		local ts = vim.treesitter
+		local original_get_node_text = ts.get_node_text
 
-			-- Safely load blink.cmp so the script doesn't crash on a fresh install
-			local ok_blink, blink = pcall(require, "blink.cmp")
-			if ok_blink and blink.get_lsp_capabilities then
-				capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities())
+		---@diagnostic disable-next-line: duplicate-set-field
+		ts.get_node_text = function(node, source, metadata)
+			if type(node) == "table" then
+				node = node[#node]
 			end
-
-			-- 1. Define all server configurations in a single, clean dictionary
-			local servers = {
-				lua_ls = {
-					capabilities = capabilities,
-					---@type lspconfig.settings.lua_ls
-					settings = {
-						Lua = {}, -- lazydev securely handles the Neovim workspace injection
-					},
-				},
-				pyright = {
-					capabilities = capabilities,
-					---@type lspconfig.settings.pyright
-					settings = {
-						python = {
-							analysis = {
-								typeCheckingMode = "basic",
-								autoImportCompletions = true,
-								logLevel = "Warning",
-								useLibraryCodeForTypes = true,
-							},
-						},
-					},
-				},
-				ruff = {
-					-- Ruff requires zero extra configuration to handle imports/linting perfectly
-					capabilities = capabilities,
-				},
-				clangd = {
-					capabilities = capabilities,
-					cmd = {
-						"clangd",
-						"--background-index",
-						"--clang-tidy",
-						"--completion-style=detailed",
-						"--all-scopes-completion",
-						"--cross-file-rename",
-					},
-				},
-				gopls = {
-					capabilities = capabilities,
-					---@type lspconfig.settings.gopls
-					settings = {
-						gopls = {
-							staticcheck = true,
-							usePlaceholders = true,
-							completeUnimported = true,
-							gofumpt = true,
-							analyses = {
-								unusedparams = true,
-								unusedwrite = true,
-								nilness = true,
-								shadow = true,
-							},
-						},
-					},
-				},
-				zls = {
-					capabilities = capabilities,
-				},
-			}
-
-			-- 2. Loop through and activate everything automatically
-			for name, config in pairs(servers) do
-				---@cast config vim.lsp.Config
-				vim.lsp.config(name, config)
-				vim.lsp.enable(name)
+			if not node then
+				return ""
 			end
-		end,
-	},
+			return original_get_node_text(node, source, metadata)
+		end
+
+		local status_ok, treesitter_configs = pcall(require, "nvim-treesitter.configs")
+		if not status_ok then
+			return
+		end
+
+		treesitter_configs.setup(opts)
+	end,
 }
