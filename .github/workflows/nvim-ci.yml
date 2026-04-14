@@ -53,7 +53,7 @@ jobs:
 
   # ─────────────────────────────────────────────────────────────────────────
   # Job 3 — Full Integration Test (E2E)
-  # This runs your actual setup.sh on a blank Ubuntu machine.
+  # This runs your actual setup.sh on a blank Ubuntu and Mac machine.
   # ─────────────────────────────────────────────────────────────────────────
   integration:
     name: "Integration (Full Install)"
@@ -65,8 +65,8 @@ jobs:
 
       - name: Run setup.sh
         run: |
-          chmod +x ./setup.sh
-          ./setup.sh
+          chmod +x ./scripts/setup.sh
+          ./scripts/setup.sh
         shell: bash
 
       - name: Verify Runtimes and Binaries

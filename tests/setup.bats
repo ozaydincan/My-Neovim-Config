@@ -1,30 +1,15 @@
 #!/usr/bin/env bats
 # tests/setup.bats — unit tests for setup.sh
-#
-# Run locally:
-#   bats tests/setup.bats
-#
-# Requirements:
-#   bats-core  >= 1.10  (https://github.com/bats-core/bats-core)
-#   bats-support + bats-assert (loaded below)
 
 # ---------------------------------------------------------------------------
-# Helpers — load bats helper libraries when present (CI installs them)
+# Helpers & Setup
 # ---------------------------------------------------------------------------
-setup_file() {
-  # Allow the suite to run even without bats-support/assert installed
-  for lib in support assert; do
-    local candidate
-    candidate="$(command -v bats 2>/dev/null | xargs dirname 2>/dev/null)/../lib/bats-${lib}/load.bash"
-    [[ -f "$candidate" ]] && load "$candidate" || true
-  done
-}
-
-# Source only the pure functions we want to unit-test; skip the main() block.
-# We redirect stderr to /dev/null to suppress "sudo: command not found" noise
-# that can occur in rootless CI containers.
 setup() {
-  # Provide safe stubs for commands the sourced functions reference
+  # 1. Load the helper libraries from the local directory (where CI puts them)
+  load "${BATS_TEST_DIRNAME}/lib/bats-support/load.bash"
+  load "${BATS_TEST_DIRNAME}/lib/bats-assert/load.bash"
+
+  # 2. Provide safe stubs for commands the sourced functions reference
   function sudo()      { true; }
   function apt-get()   { true; }
   function brew()      { true; }
@@ -36,7 +21,7 @@ setup() {
   function nvim()      { echo "NVIM v0.11.0"; }  # sensible default
   export -f sudo apt-get brew snap rustup cargo curl git nvim
 
-  # Source the script in a sub-shell so `set -e` and variable side-effects
+  # 3. Source the script in a sub-shell so `set -e` and variable side-effects
   # are isolated.  We skip the "main" execution block by exiting early via a
   # trick: override `uname` to return an unrecognised OS string so the case
   # falls through to the `err / exit 1` branch — which we have stubbed out.
@@ -45,8 +30,10 @@ setup() {
   export -f uname err
 
   # shellcheck disable=SC1090
-  source "${BATS_TEST_DIRNAME}/../setup.sh" 2>/dev/null || true
+  source "${BATS_TEST_DIRNAME}/../scripts/setup.sh" 2>/dev/null || true
 }
+
+# ... (The rest of your @test blocks remain exactly the same) ...
 
 # ---------------------------------------------------------------------------
 # detect_arch
@@ -212,6 +199,29 @@ setup() {
   rm -rf "$tmpdir"
 }
 
+# ---------------------------------------------------------------------------
+# update_shell_path — path injection logic
+# ---------------------------------------------------------------------------
+
+@test "update_shell_path: writes mason path to bashrc when missing" {
+  local tmpdir tmprc
+  tmpdir="$(mktemp -d)"
+  tmprc="${tmpdir}/.bashrc"
+  touch "$tmprc"
+
+  SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/.local/share/nvim/mason/bin" \
+    run bash -c "
+      source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
+      HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/.local/share/nvim/mason/bin' \
+        update_shell_path
+    "
+    
+  assert_success
+  assert grep -q "mason/bin" "$tmprc"
+  
+  rm -rf "$tmpdir"
+}
+
 @test "update_shell_path: does not duplicate mason path if already present" {
   local tmpdir tmprc
   tmpdir="$(mktemp -d)"
@@ -223,7 +233,7 @@ setup() {
 
   SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/mason/bin" \
     run bash -c "
-      source '${BATS_TEST_DIRNAME}/../setup.sh' 2>/dev/null || true
+      source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
       HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/mason/bin' \
         update_shell_path
     "
@@ -244,7 +254,7 @@ setup() {
 @test "GO_VERSION env var is respected (default set in script)" {
   # The script sets GO_VERSION="${GO_VERSION:-1.23.5}" — check the default
   run bash -c "
-    source '${BATS_TEST_DIRNAME}/../setup.sh' 2>/dev/null || true
+    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
     echo \"\$GO_VERSION\"
   "
   
@@ -254,7 +264,7 @@ setup() {
 
 @test "GO_VERSION can be overridden by caller" {
   run env GO_VERSION=1.99.0 bash -c "
-    source '${BATS_TEST_DIRNAME}/../setup.sh' 2>/dev/null || true
+    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
     echo \"\$GO_VERSION\"
   "
   
