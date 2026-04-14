@@ -73,9 +73,6 @@ end, { noremap = true, silent = true, desc = "DAP conditional breakpoint" })
 vim.keymap.set("n", "<Leader>de", function()
 	require("dap").terminate()
 end, { noremap = true, silent = true, desc = "DAP terminate" })
-vim.keymap.set("n", "<Leader>dr", function()
-	require("dap").run_last()
-end, { noremap = true, silent = true, desc = "DAP run last" })
 
 -- Rust LSP related key mappings (for Rust development)
 vim.keymap.set("n", "<Leader>dt", function()
@@ -88,26 +85,13 @@ vim.keymap.set("n", "<Leader>dd", function()
 	vim.cmd("RustLsp debuggables")
 end, { noremap = true, silent = true, desc = "Rust debuggables" })
 
--- Overseer key mappings (for task running and managing)
-vim.keymap.set("n", "<C-o>f", "<cmd>CompilerOpen<CR>", opts)
-vim.keymap.set("n", "<C-o>r", "<cmd>CompilerRedo<CR>", opts)
-vim.keymap.set("n", "<C-o>x", "<cmd>CompilerStop<CR>", opts)
-vim.keymap.set("n", "<C-o>t", "<cmd>CompilerToggleResults<CR>", opts)
 vim.keymap.set("n", "<leader>mc", function()
 	vim.fn.setreg("+", vim.fn.execute("messages"))
 	vim.notify("Messages copied to clipboard!")
 end, { desc = "Copy messages to clipboard" })
 
--- LSP code actions (use Telescope if available)
-local function code_actions()
-	local ok, builtin = pcall(require, "telescope.builtin")
-	if ok and builtin.lsp_code_actions then
-		builtin.lsp_code_actions()
-		return
-	end
-	vim.lsp.buf.code_action()
-end
-vim.keymap.set({ "n", "v" }, "<leader>ca", code_actions, { noremap = true, silent = true, desc = "Code actions" })
+-- LSP code actions
+vim.keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, { desc = "Code actions" })
 
 -- Set consistent indentation (2 spaces per indentation level)
 vim.opt.tabstop = 2
