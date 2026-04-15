@@ -201,3 +201,43 @@ setup() {
   local tmpdir tmprc
   tmpdir="$(mktemp -d)"
   tmprc="${tmpdir}/.bashrc"
+  echo 'export PATH="/fake/.local/share/nvim/mason/bin:$PATH"' > "$tmprc"
+
+  SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/.local/share/nvim/mason/bin" \
+    run bash -c "
+      source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
+      HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/.local/share/nvim/mason/bin' \
+        update_shell_path
+    "
+    
+  assert_success
+  # Verify the path appears exactly once (no duplication)
+  assert_equal "$(grep -c 'mason/bin' "$tmprc")" "1"
+  
+  rm -rf "$tmpdir"
+}
+
+# ---------------------------------------------------------------------------
+# GO_VERSION passthrough
+# ---------------------------------------------------------------------------
+
+@test "GO_VERSION env var is respected (default set in script)" {
+  # The script sets GO_VERSION="${GO_VERSION:-1.23.5}" — check the default
+  run bash -c "
+    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
+    echo \"\$GO_VERSION\"
+  "
+  
+  assert_success
+  assert [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+@test "GO_VERSION can be overridden by caller" {
+  run env GO_VERSION=1.99.0 bash -c "
+    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
+    echo \"\$GO_VERSION\"
+  "
+  
+  assert_success
+  assert_output "1.99.0"
+}
