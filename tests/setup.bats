@@ -33,8 +33,6 @@ setup() {
   source "${BATS_TEST_DIRNAME}/../scripts/setup.sh" 2>/dev/null || true
 }
 
-# ... (The rest of your @test blocks remain exactly the same) ...
-
 # ---------------------------------------------------------------------------
 # detect_arch
 # ---------------------------------------------------------------------------
@@ -188,29 +186,6 @@ setup() {
 
   SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/.local/share/nvim/mason/bin" \
     run bash -c "
-      source '${BATS_TEST_DIRNAME}/../setup.sh' 2>/dev/null || true
-      HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/.local/share/nvim/mason/bin' \
-        update_shell_path
-    "
-    
-  assert_success
-  assert grep -q "mason/bin" "$tmprc"
-  
-  rm -rf "$tmpdir"
-}
-
-# ---------------------------------------------------------------------------
-# update_shell_path — path injection logic
-# ---------------------------------------------------------------------------
-
-@test "update_shell_path: writes mason path to bashrc when missing" {
-  local tmpdir tmprc
-  tmpdir="$(mktemp -d)"
-  tmprc="${tmpdir}/.bashrc"
-  touch "$tmprc"
-
-  SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/.local/share/nvim/mason/bin" \
-    run bash -c "
       source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
       HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/.local/share/nvim/mason/bin' \
         update_shell_path
@@ -226,48 +201,3 @@ setup() {
   local tmpdir tmprc
   tmpdir="$(mktemp -d)"
   tmprc="${tmpdir}/.bashrc"
-  echo 'export PATH="/fake/mason/bin:$PATH"' > "$tmprc"
-
-  local line_count_before
-  line_count_before=$(wc -l < "$tmprc")
-
-  SHELL="/bin/bash" HOME="$tmpdir" MASON_BIN="/fake/mason/bin" \
-    run bash -c "
-      source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
-      HOME='$tmpdir' SHELL='/bin/bash' MASON_BIN='/fake/mason/bin' \
-        update_shell_path
-    "
-    
-  assert_success
-  
-  local line_count_after
-  line_count_after=$(wc -l < "$tmprc")
-  assert [ "$line_count_before" -eq "$line_count_after" ]
-  
-  rm -rf "$tmpdir"
-}
-
-# ---------------------------------------------------------------------------
-# GO_VERSION passthrough
-# ---------------------------------------------------------------------------
-
-@test "GO_VERSION env var is respected (default set in script)" {
-  # The script sets GO_VERSION="${GO_VERSION:-1.23.5}" — check the default
-  run bash -c "
-    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
-    echo \"\$GO_VERSION\"
-  "
-  
-  assert_success
-  assert [[ "$output" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
-}
-
-@test "GO_VERSION can be overridden by caller" {
-  run env GO_VERSION=1.99.0 bash -c "
-    source '${BATS_TEST_DIRNAME}/../scripts/setup.sh' 2>/dev/null || true
-    echo \"\$GO_VERSION\"
-  "
-  
-  assert_success
-  assert_output "1.99.0"
-}

@@ -94,10 +94,12 @@ install_yazi() {
     log "Yazi already installed: $(yazi --version 2>/dev/null | head -n 1 || echo 'unknown')"
     return
   fi
-  log "Compiling Yazi from source (this takes a few minutes on first run)..."
+  log "Compiling Yazi via yazi-build wrapper (this takes a few minutes)..."
   # shellcheck disable=SC1091
   source "$HOME/.cargo/env"
-  cargo install --locked yazi-fm yazi-cli
+  
+  cargo install --force yazi-build
+  
   log "Yazi installed."
 }
 
