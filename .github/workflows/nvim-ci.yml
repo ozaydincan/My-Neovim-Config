@@ -90,9 +90,10 @@ jobs:
           python-version: '3.12'
 
       - name: Setup Neovim (Nightly)
-        uses: neovim/setup-neovim@v1
+        uses: rhysd/action-setup-vim@v1
         with:
-          neovim-version: nightly
+          neovim-version: true
+          version: stable
 
       - name: Install ripgrep & fd
         run: |
