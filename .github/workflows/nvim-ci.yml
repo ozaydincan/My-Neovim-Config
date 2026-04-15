@@ -47,24 +47,23 @@ jobs:
       - name: Verify Runtimes and Binaries
         run: |
           # Check Neovim version
-          /usr/bin/nvim --version | grep -E "NVIM v0\.(11|12)"
+          nvim --version | grep -E "NVIM v0\.(11|12)"
           
-          # Check Go
-          /usr/local/bin/go version
+          # Check Go (relies on PATH)
+          go version
           
           # Check Rust/Cargo
           source $HOME/.cargo/env
           cargo --version
           
-          # Check Yazi (compiled from source)
-          $HOME/.cargo/bin/yazi --version
+          # Check Yazi (now accessible because cargo env is sourced)
+          yazi --version
           
-          # Check Python Venv
+          # Check Python Venv (absolute path required since venv isn't activated)
           $HOME/.venv/neovim/bin/python3 --version
           
           # Check Node.js
           node --version
-
   # ─────────────────────────────────────────────────────────────────────────
   # Job 3 — Neovim Environment Tests (plenary.nvim)
   # ─────────────────────────────────────────────────────────────────────────
