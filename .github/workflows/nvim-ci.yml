@@ -89,10 +89,10 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Setup Neovim (Nightly)
+      - name: Setup Neovim (Stable)
         uses: rhysd/action-setup-vim@v1
         with:
-          neovim-version: true
+          neovim: true
           version: stable
 
       - name: Install ripgrep & fd
@@ -109,7 +109,8 @@ jobs:
         run: |
           python -m venv "$HOME/.venv/neovim"
           "$HOME/.venv/neovim/bin/pip" install --quiet --upgrade pynvim
-
+          echo "NVIM_PYTHON3=$HOME/.venv/neovim/bin/python3" >> "$GITHUB_ENV"
+      
       - name: Bootstrap Config
         run: |
           git clone --depth=1 "$REPO_URL" "$HOME/.config/nvim"
@@ -121,4 +122,4 @@ jobs:
             -c "PlenaryBustedDirectory tests/ {minimal_init='tests/minimal_init.lua', sequential=true}" \
             +qa
         env:
-          NVIM_PYTHON3_HOST_PROG: "${{ env.HOME }}/.venv/neovim/bin/python3"
+          NVIM_PYTHON3_HOST_PROG: "${{ env.NVIM_PYTHON3 }}"
