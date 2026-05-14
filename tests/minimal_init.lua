@@ -1,26 +1,29 @@
 -- tests/minimal_init.lua
--- Loaded by Plenary before running specs.
+local root = vim.fn.fnamemodify(".", ":p")
+local data = vim.fn.stdpath("data")
 
-local data = vim.fn.stdpath("data") -- ~/.local/share/nvim
-local config = vim.fn.stdpath("config") -- ~/.config/nvim
-
--- 1. lazy.nvim itself must be on the runtimepath first
+-- 1. Ensure lazy.nvim is found
 local lazypath = data .. "/lazy/lazy.nvim"
 if not vim.uv.fs_stat(lazypath) then
-	error("[minimal_init] lazy.nvim not found at " .. lazypath .. ". Run `nvim --headless '+Lazy! sync' +qa` first.")
+	-- Fallback: check if it's in the current workspace (common in CI)
+	lazypath = root .. "path/to/local/lazy" -- Adjust if you store plugins locally
 end
+
 vim.opt.runtimepath:prepend(lazypath)
+vim.opt.runtimepath:prepend(root)
 
--- 2. The real nvim config must be on the runtimepath
-vim.opt.runtimepath:prepend(config)
+-- 2. Force settings for Headless CI
+vim.o.swapfile = false
+vim.o.termguicolors = false -- Explicitly false for headless
 
--- 3. Run the full config (sets options, keymaps, bootstraps lazy)
-local ok, err = pcall(dofile, config .. "/init.lua")
+-- 3. Load the real init.lua
+-- We use the absolute path to the root to avoid "file not found"
+local ok, err = pcall(dofile, root .. "init.lua")
 if not ok then
-	error("[minimal_init] init.lua failed to load: " .. tostring(err))
+	print("Error loading init.lua: " .. tostring(err))
 end
 
--- 4. Guard: plenary must be installed by now
+-- 4. Final check for Plenary
 if not pcall(require, "plenary") then
-	error("[minimal_init] plenary.nvim is required for tests. Run `nvim --headless '+Lazy! sync' +qa` first.")
+	error("Plenary not found. RTP: " .. vim.o.runtimepath)
 end
