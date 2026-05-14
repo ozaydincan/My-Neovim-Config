@@ -17,13 +17,23 @@ vim.o.swapfile = false
 vim.o.termguicolors = false -- Explicitly false for headless
 
 -- 3. Load the real init.lua
--- We use the absolute path to the root to avoid "file not found"
 local ok, err = pcall(dofile, root .. "init.lua")
 if not ok then
 	print("Error loading init.lua: " .. tostring(err))
 end
 
-vim.cmd("Lazy load all")
+-- Force lazy to parse and register all plugin specs in this session.
+-- lazy.plugins() reads from lazy.core.config.spec, which is only populated
+-- after lazy.core.loader is initialised — we trigger that explicitly here.
+local lazy_ok, lazy_config = pcall(require, "lazy.core.config")
+if lazy_ok and lazy_config.spec then
+	local spec_ok, lazy_spec = pcall(require, "lazy.core.plugin")
+	if spec_ok then
+		pcall(function()
+			lazy_spec.update_state()
+		end)
+	end
+end
 
 -- 4. Final check for Plenary
 if not pcall(require, "plenary") then
