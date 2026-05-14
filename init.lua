@@ -18,6 +18,7 @@ vim.g.maplocalleader = " "
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+vim.o.swapfile = false
 vim.opt.rtp:prepend(lazypath)
 vim.opt.hidden = true
 require("vim-options")
