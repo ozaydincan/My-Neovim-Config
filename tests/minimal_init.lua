@@ -23,6 +23,13 @@ if not ok then
 	print("Error loading init.lua: " .. tostring(err))
 end
 
+local lazy_ok, lazy = pcall(require, "lazy")
+if lazy_ok then
+  lazy.load({plugins = lazy.plugins()})
+end
+
+vim.cmd("Lazy! load all")
+
 -- 4. Final check for Plenary
 if not pcall(require, "plenary") then
 	error("Plenary not found. RTP: " .. vim.o.runtimepath)
