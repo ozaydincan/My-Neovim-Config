@@ -2,6 +2,7 @@ return {
   {
     "saghen/blink.cmp",
     dependencies = {
+      "saghen/blink.lib", 
       "L3MON4D3/LuaSnip",
       "rafamadriz/friendly-snippets",
     },
@@ -15,11 +16,9 @@ return {
       sources = {
         default = { "lazydev", "lsp", "path", "snippets", "buffer" },
         providers = {
-          -- add lazydev to your completion providers
           lazydev = {
             name = "LazyDev",
             module = "lazydev.integrations.blink",
-            -- make lazydev completions top priority (see `:h blink.cmp`)
             score_offset = 100,
           },
         },
