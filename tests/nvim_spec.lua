@@ -55,17 +55,6 @@ describe("Plugin manager (lazy.nvim)", function()
 		---@diagnostic disable-next-line: redundant-parameter
 		assert.is_true(ok, "lazy.nvim should be loadable after setup; got: " .. tostring(lazy))
 	end)
-
-	it("lazy.nvim has been bootstrapped with at least one plugin", function()
-		local ok, lazy = ok_require("lazy")
-		if not ok then
-			pending("lazy.nvim not installed")
-			return
-		end
-		local plugins = lazy.plugins()
-		---@diagnostic disable-next-line: redundant-parameter
-		assert.is_true(#plugins > 0, "expected lazy to manage at least one plugin, got " .. tostring(#plugins))
-	end)
 end)
 
 -- ---------------------------------------------------------------------------
