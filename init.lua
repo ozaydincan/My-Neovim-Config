@@ -1,3 +1,5 @@
+-- init.lua
+
 local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
 if not (vim.uv or vim.loop).fs_stat(lazypath) then
 	local lazyrepo = "https://github.com/folke/lazy.nvim.git"
@@ -18,6 +20,7 @@ vim.g.maplocalleader = " "
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
 
+vim.o.swapfile = false
 vim.opt.rtp:prepend(lazypath)
 vim.opt.hidden = true
 require("vim-options")

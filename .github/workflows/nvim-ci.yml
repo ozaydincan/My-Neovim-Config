@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [main, development]
+  pull_request:
+  workflow_dispatch: # Allows manual triggering from GitHub UI
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 1 — Shellcheck (Linting)
+  # ─────────────────────────────────────────────────────────────────────────
+  shellcheck:
+    name: "Shellcheck"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run shellcheck on setup.sh
+        uses: ludeeus/action-shellcheck@2.0.0
+        with:
+          scandir: "."
+          ignore_codes: "SC1091 SC2034"
+          severity: error
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 2 — Full Integration Test (E2E)
+  # This runs your actual setup.sh on a blank Ubuntu machine.
+  # ─────────────────────────────────────────────────────────────────────────
+  integration:
+    name: "Integration (Full Install)"
+    runs-on: ubuntu-latest
+    env:
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run setup.sh
+        run: |
+          chmod +x ./scripts/setup.sh
+          ./scripts/setup.sh
+        shell: bash
+
+      - name: Verify Runtimes and Binaries
+        run: |
+          # Check Neovim version
+          nvim --version | grep -E "NVIM v0\.(11|12)"
+          
+          # Check Go (relies on PATH)
+          go version
+          
+          # Check Rust/Cargo
+          source $HOME/.cargo/env
+          cargo --version
+          
+          # Check Yazi (now accessible because cargo env is sourced)
+          yazi --version
+          
+          # Check Python Venv (absolute path required since venv isn't activated)
+          $HOME/.venv/neovim/bin/python3 --version
+          
+          # Check Node.js
+          node --version
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 3 — Neovim Environment Tests (plenary.nvim)
+  # ─────────────────────────────────────────────────────────────────────────
+  plenary:
+    name: "Lua config tests (plenary) (${{ matrix.os }})"
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-24.04, macos-latest]
+    env:
+      REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Setup Neovim (Stable)
+        uses: rhysd/action-setup-vim@v1
+        with:
+          neovim: true
+          version: stable
+
+      - name: Install ripgrep & fd
+        run: |
+          if [ "$RUNNER_OS" == "Linux" ]; then
+            sudo apt-get install -y ripgrep fd-find
+            sudo ln -sf "$(command -v fdfind)" /usr/local/bin/fd
+          else
+            brew install ripgrep fd
+          fi
+        shell: bash
+
+      - name: Create Python venv
+        run: |
+          python -m venv "$HOME/.venv/neovim"
+          "$HOME/.venv/neovim/bin/pip" install --quiet --upgrade pynvim
+          echo "NVIM_PYTHON3=$HOME/.venv/neovim/bin/python3" >> "$GITHUB_ENV"
+      
+      - name: Bootstrap Config
+        run: |
+          git clone --depth=1 "$REPO_URL" "$HOME/.config/nvim"
+          nvim --headless "+Lazy! sync" +qa 2>/dev/null || true
+
+      - name: Run Plenary specs
+        run: |
+          nvim --headless \
+            -c "PlenaryBustedDirectory tests/ {minimal_init='tests/minimal_init.lua', sequential=true}" \
+            +qa
+        env:
+          NVIM_PYTHON3_HOST_PROG: "${{ env.NVIM_PYTHON3 }}"

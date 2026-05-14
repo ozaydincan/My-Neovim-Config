@@ -2,47 +2,54 @@ return {
 	{
 		"williamboman/mason.nvim",
 		lazy = false,
-		config = true, -- Modern lazy shortcut: automatically calls require("mason").setup()
+		config = true,
 	},
 	{
 		"williamboman/mason-lspconfig.nvim",
 		lazy = false,
-		opts = {
-			auto_install = false,
-			ensure_installed = {
-				"lua_ls",
-				"gopls",
-				"zls",
-				"pyright",
-				"clangd",
-				"ruff", -- Added Ruff for Python formatting & import sorting
-			},
-		},
-		config = true, -- Modern lazy shortcut
 	},
 	{
 		"neovim/nvim-lspconfig",
 		lazy = false,
+		dependencies = { "williamboman/mason.nvim", "williamboman/mason-lspconfig.nvim" },
 		config = function()
-			local capabilities = vim.lsp.protocol.make_client_capabilities()
+			vim.diagnostic.config({
+				virtual_text = { spacing = 4, prefix = "●" },
+				signs = true,
+				underline = true,
+				update_in_insert = false,
+				severity_sort = true,
+				float = { border = "rounded", source = true },
+			})
 
-			-- Safely load blink.cmp so the script doesn't crash on a fresh install
+			vim.api.nvim_create_autocmd("LspAttach", {
+				callback = function(event)
+					local map = function(keys, func, desc)
+						vim.keymap.set("n", keys, func, { buffer = event.buf, desc = "LSP: " .. desc })
+					end
+					map("<leader>gd", vim.lsp.buf.definition, "Goto Definition")
+					map("<leader>gD", vim.lsp.buf.declaration, "Goto Declaration")
+					map("<leader>gr", vim.lsp.buf.references, "Goto References")
+					map("<leader>gi", vim.lsp.buf.implementation, "Goto Implementation")
+					map("K", vim.lsp.buf.hover, "Hover Documentation")
+					map("<leader>rn", vim.lsp.buf.rename, "Rename")
+					map("<leader>ca", vim.lsp.buf.code_action, "Code Action")
+					map("<leader>d", vim.diagnostic.open_float, "Show Diagnostics")
+				end,
+			})
+
+			local capabilities = vim.lsp.protocol.make_client_capabilities()
 			local ok_blink, blink = pcall(require, "blink.cmp")
 			if ok_blink and blink.get_lsp_capabilities then
 				capabilities = vim.tbl_deep_extend("force", capabilities, blink.get_lsp_capabilities())
 			end
 
-			-- 1. Define all server configurations in a single, clean dictionary
 			local servers = {
 				lua_ls = {
-					capabilities = capabilities,
 					---@type lspconfig.settings.lua_ls
-					settings = {
-						Lua = {}, -- lazydev securely handles the Neovim workspace injection
-					},
+					settings = { Lua = {} },
 				},
 				pyright = {
-					capabilities = capabilities,
 					---@type lspconfig.settings.pyright
 					settings = {
 						python = {
@@ -51,16 +58,19 @@ return {
 								autoImportCompletions = true,
 								logLevel = "Warning",
 								useLibraryCodeForTypes = true,
+								ignore = { "*" },
 							},
 						},
 					},
 				},
 				ruff = {
-					-- Ruff requires zero extra configuration to handle imports/linting perfectly
-					capabilities = capabilities,
+					on_attach = function(client)
+						---@cast client vim.lsp.Client
+						client.server_capabilities.hoverProvider = false
+					end,
 				},
 				clangd = {
-					capabilities = capabilities,
+					---@type string[]
 					cmd = {
 						"clangd",
 						"--background-index",
@@ -71,7 +81,6 @@ return {
 					},
 				},
 				gopls = {
-					capabilities = capabilities,
 					---@type lspconfig.settings.gopls
 					settings = {
 						gopls = {
@@ -88,16 +97,26 @@ return {
 						},
 					},
 				},
-				zls = {
-					capabilities = capabilities,
-				},
+				zls = {},
 			}
 
-			-- 2. Loop through and activate everything automatically
-			for name, config in pairs(servers) do
+			require("mason-lspconfig").setup({
+				auto_install = false,
+				ensure_installed = {
+					"lua_ls",
+					"gopls",
+					"zls",
+					"pyright",
+					"clangd",
+					"ruff",
+				},
+			})
+
+			for server_name, config in pairs(servers) do
 				---@cast config vim.lsp.Config
-				vim.lsp.config(name, config)
-				vim.lsp.enable(name)
+				config = vim.tbl_deep_extend("keep", config, { capabilities = capabilities })
+				vim.lsp.config(server_name, config)
+				vim.lsp.enable(server_name)
 			end
 		end,
 	},
